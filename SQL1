@@ -1,0 +1,21 @@
+SELECT a.product_id,
+         b.repaymentplan_type,
+         b.plan_category,
+         owner_asset_channel,
+         date(pay_time) AS "还款时间",
+         sum(amount) AS "应还",
+         sum(this_pay_amount) AS "实还"
+FROM 
+    (SELECT *
+    FROM hive_fbdc.financial.hdp_fi_assets_performance_ares
+    WHERE dt='2020-03-25'
+            AND plan_owner='FUND'
+            AND cur_funder=104) a
+LEFT JOIN 
+    (SELECT *
+    FROM hive_pro.hdp_data_ods.hdp_ods_t_ares_repayment_detail
+    WHERE pay_time>=date('2020-02-20')
+            AND project_plan_owner=0) b
+    ON a.project_id=b.project_id
+WHERE b.project_id is NOT null
+GROUP BY  1,2,3,4,5
