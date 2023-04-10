@@ -1,0 +1,39 @@
+SELECT date_format(drawdownstamp,
+        '%Y-%m') AS ddmonth ,dt ,sum(drawdownamount) AS ddamt ,sum(if(drawdownamount>0,1,0)) AS ddcnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,1,0)) AS oscnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,drawdownamount,0)) AS osddamt
+FROM hive_pro.hdp_data_rpt.hdp_rpt_loan_performance_monthly
+WHERE syscode||channeldetailcode IN ('in73','inDM-XJ','in2','inY2','gaia11','apolloDM-XJ')
+        AND drawdownstamp>=date '2017-01-01'
+        AND dt>='2017-01-01'
+GROUP BY  1,2
+
+---------NDD Product frm JM
+
+SELECT date_format(drawdownstamp,
+        '%Y-%m') AS ddmonth ,dt ,m.product ,sum(drawdownamount) AS ddamt ,sum(if(drawdownamount>0,1,0)) AS ddcnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,1,0)) AS oscnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,drawdownamount,0)) AS osddamt
+FROM hive_pro.hdp_data_rpt.hdp_rpt_loan_performance_monthly a
+JOIN hive_pro.report.product_code m
+    ON a.syscode=m.syscode
+        AND a.channeldetailcode=m.channeldetailcode
+WHERE fundingsource='104'
+        AND drawdownstamp>=date '2017-01-01'
+        AND dt>='2017-01-01'
+GROUP BY  1,2,3
+UNION
+allSELECT date_format(drawdowndate,
+        '%Y-%m') AS ddmonth ,dt ,m.product ,sum(drawdownamt) AS ddamt ,sum(if(drawdownamt>0,1,0)) AS ddcnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,1,0)) AS oscnt ,sum(if(currentosprincipal>0
+        AND curoverdueday<=90,drawdownamt,0)) AS osddamt
+FROM hive_pro.hdp_data_rpt.hdp_rpt_pos_revolving_translevel_mthlysnap a
+JOIN 
+    (SELECT DISTINCT product,
+        channeldetailcode
+    FROM hive_pro.report.product_code) m
+    ON a.productcode=m.channeldetailcode
+WHERE fundingpartner='104'
+        AND drawdowndate>=date '2017-01-01'
+        AND dt>='2017-01-01'
+GROUP BY  1,2,3
